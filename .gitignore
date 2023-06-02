@@ -10,6 +10,9 @@
 
 # Test binary, built with `go test -c`
 *.test
+bin
+testbin/*
+Dockerfile.cross
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
@@ -19,3 +22,13 @@
 
 # Go workspace file
 go.work
+
+# Kubernetes Generated files - skip generated files, except for vendored files
+
+!vendor/**/zz_generated.*
+
+# editor and IDE paraphernalia
+.idea
+*.swp
+*.swo
+*~

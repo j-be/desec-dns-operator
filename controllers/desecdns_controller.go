@@ -22,11 +22,14 @@ import (
 
 	"golang.org/x/exp/slices"
 	networkingv1 "k8s.io/api/networking/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	v1 "github.com/j-be/desec-dns-operator/api/v1"
 	"github.com/j-be/desec-dns-operator/controllers/desec"
 	"github.com/j-be/desec-dns-operator/controllers/util"
 )
@@ -59,6 +62,19 @@ func (r *DesecDnsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	desecClient := desec.Client{
 		Domain: "great-horned-owl.dedyn.io",
 		Token:  util.TOKEN,
+	}
+
+	// Fetch or create CR
+	dnsCr := v1.DesecDns{}
+	if err := r.Client.Get(ctx, types.NamespacedName{Namespace: "cert-manager", Name: desecClient.Domain}, &dnsCr); err != nil {
+		if !errors.IsNotFound(err) {
+			log.Error(err, "Failed to load CR", "req", req)
+			return ctrl.Result{}, err
+		}
+		// Initialize
+		dnsCr = util.InitializeDesecDns(desecClient.Domain, "cert-manager")
+		err := r.Client.Create(ctx, &dnsCr)
+		return ctrl.Result{Requeue: true}, err
 	}
 
 	// Make sure domain exists

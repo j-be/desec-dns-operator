@@ -18,13 +18,17 @@ package controllers
 
 import (
 	"context"
+	"time"
 
+	"golang.org/x/exp/slices"
+	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	desecv1 "github.com/j-be/desec-dns-operator/api/v1"
+	"github.com/j-be/desec-dns-operator/controllers/desec"
+	"github.com/j-be/desec-dns-operator/controllers/util"
 )
 
 // DesecDnsReconciler reconciles a DesecDns object
@@ -47,16 +51,60 @@ type DesecDnsReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.1/pkg/reconcile
 func (r *DesecDnsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	log := log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	log.Info("Starting", "req", req)
 
-	return ctrl.Result{}, nil
+	// Create deSEC client
+	desecClient := desec.Client{
+		Domain: "great-horned-owl.dedyn.io",
+		Token:  util.TOKEN,
+	}
+
+	// Make sure domain exists
+	domains, err := desecClient.GetDomains()
+	if err != nil {
+		log.Error(err, "Failed to fetch domains")
+		return ctrl.Result{}, err
+	}
+	if !slices.ContainsFunc(domains, func(domain desec.Domain) bool { return domain.Name == desecClient.Domain }) {
+		domain, err := desecClient.CreateDomain()
+		if err == nil {
+			log.Info("Domain created", "domain", domain)
+		}
+		return ctrl.Result{Requeue: true}, err
+	}
+
+	// Fetch ingress
+	ingress := networkingv1.Ingress{}
+	if err := r.Client.Get(ctx, req.NamespacedName, &ingress); err != nil {
+		log.Error(err, "Failed to load ingress", "req", req)
+		return ctrl.Result{}, err
+	}
+
+	rrsets, _ := desecClient.GetRRSets()
+
+	// Add missing CNAMES
+	for _, subname := range util.GetSubnames(ingress, desecClient.Domain) {
+		if !slices.ContainsFunc(rrsets, func(rrset desec.RRSet) bool { return rrset.Type == "CNAME" && rrset.Subname == subname }) {
+			log.Info("Adding CNAME", "subname", subname, "domain", desecClient.Domain)
+			cname, err := desecClient.CreateCNAME(subname)
+			if err == nil {
+				log.Info("CNAME created", "cname", cname)
+			}
+			return ctrl.Result{Requeue: true}, err
+		}
+	}
+
+	// Update IP
+	log.Info("Updating IP")
+	err = desecClient.UpdateIp(util.GetIps(ingress))
+	return ctrl.Result{Requeue: true, RequeueAfter: 5 * time.Minute}, err
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *DesecDnsReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&desecv1.DesecDns{}).
+		For(&networkingv1.Ingress{}).
 		Complete(r)
 }

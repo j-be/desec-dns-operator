@@ -37,6 +37,7 @@ func InitializeDesecDns(domain string, namespace string) v1.DesecDns {
 	cr := v1.DesecDns{}
 	cr.ObjectMeta.Name = domain
 	cr.ObjectMeta.Namespace = namespace
+	cr.Spec.IPs = []string{}
 	return cr
 }
 

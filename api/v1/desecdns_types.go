@@ -27,6 +27,9 @@ import (
 type DesecDnsSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
+	// The IPs associated with this domain
+	IPs []string `json:"ips"`
 }
 
 // DesecDnsStatus defines the observed state of DesecDns

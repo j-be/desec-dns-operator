@@ -18,11 +18,14 @@ package controllers
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"golang.org/x/exp/slices"
 	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -77,6 +80,13 @@ func (r *DesecDnsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{Requeue: true}, err
 	}
 
+	// Initialize status
+	if len(dnsCr.Status.Conditions) == 0 {
+		dnsCr.Status = util.InitializeDesecDnsStatus()
+		err := r.Client.Status().Update(ctx, &dnsCr)
+		return ctrl.Result{Requeue: true}, err
+	}
+
 	// Make sure domain exists
 	domains, err := desecClient.GetDomains()
 	if err != nil {
@@ -84,10 +94,11 @@ func (r *DesecDnsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, err
 	}
 	if !slices.ContainsFunc(domains, func(domain desec.Domain) bool { return domain.Name == desecClient.Domain }) {
-		domain, err := desecClient.CreateDomain()
-		if err == nil {
-			log.Info("Domain created", "domain", domain)
-		}
+		_, err := desecClient.CreateDomain()
+		return ctrl.Result{Requeue: true}, err
+	}
+	if util.UpdateDesecDnsStatus(&dnsCr.Status, "Domain", metav1.ConditionTrue, "Created", "") {
+		err := r.Client.Status().Update(ctx, &dnsCr)
 		return ctrl.Result{Requeue: true}, err
 	}
 
@@ -110,11 +121,28 @@ func (r *DesecDnsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			}
 			return ctrl.Result{Requeue: true}, err
 		}
+		if util.UpdateDesecDnsStatus(&dnsCr.Status, subname, metav1.ConditionTrue, "Created", "") {
+			err := r.Client.Status().Update(ctx, &dnsCr)
+			return ctrl.Result{Requeue: true}, err
+		}
 	}
 
 	// Update IP
 	log.Info("Updating IP")
-	err = desecClient.UpdateIp(util.GetIps(ingress))
+	ips := util.GetIps(ingress)
+	if err := desecClient.UpdateIp(ips); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if util.UpdateDesecDnsStatus(
+		&dnsCr.Status,
+		"IpUpdate",
+		metav1.ConditionTrue,
+		"Updated",
+		fmt.Sprintf("Updated to: [%s]", strings.Join(ips, ", ")),
+	) {
+		err = r.Client.Status().Update(ctx, &dnsCr)
+	}
 	return ctrl.Result{Requeue: true, RequeueAfter: 5 * time.Minute}, err
 }
 

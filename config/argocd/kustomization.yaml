@@ -1,0 +1,16 @@
+namespace: desec-dns-operator
+
+resources:
+- ../default
+
+patchesStrategicMerge:
+- ./deployment.yaml
+
+configMapGenerator:
+- name: desec-dns-operator
+  literals:
+  - namespace=desec-dns-operator
+  - domain=great-horned-owl.dedyn.io
+
+generatorOptions:
+  disableNameSuffixHash: true

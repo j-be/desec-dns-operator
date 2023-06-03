@@ -6,6 +6,7 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	v1 "github.com/j-be/desec-dns-operator/api/v1"
 )
@@ -31,10 +32,10 @@ func GetIps(ingress networkingv1.Ingress) []string {
 	return ips
 }
 
-func InitializeDesecDns(domain string, namespace string) v1.DesecDns {
+func InitializeDesecDns(namespacedName types.NamespacedName) v1.DesecDns {
 	cr := v1.DesecDns{}
-	cr.ObjectMeta.Name = domain
-	cr.ObjectMeta.Namespace = namespace
+	cr.ObjectMeta.Name = namespacedName.Name
+	cr.ObjectMeta.Namespace = namespacedName.Namespace
 	cr.Spec.IPs = []string{}
 	return cr
 }

@@ -24,12 +24,12 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	v1 "github.com/j-be/desec-dns-operator/api/v1"
+	"github.com/j-be/desec-dns-operator/controllers/config"
 	"github.com/j-be/desec-dns-operator/controllers/desec"
 	"github.com/j-be/desec-dns-operator/controllers/util"
 )
@@ -59,7 +59,12 @@ func (r *IngressReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	log.Info("Starting", "req", req)
 
 	// Create deSEC client
-	desecClient, err := desec.NewClient("great-horned-owl.dedyn.io")
+	desecConfig, err := config.NewConfigFor()
+	if err != nil {
+		log.Error(err, "Failed to read the configuration")
+		return ctrl.Result{}, err
+	}
+	desecClient, err := desec.NewClient(desecConfig.Domain)
 	if err != nil {
 		log.Error(err, "Cannot create client")
 		return ctrl.Result{}, err
@@ -67,13 +72,13 @@ func (r *IngressReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	// Fetch or create CR
 	dnsCr := v1.DesecDns{}
-	if err := r.Client.Get(ctx, types.NamespacedName{Namespace: "cert-manager", Name: desecClient.Domain}, &dnsCr); err != nil {
+	if err := r.Client.Get(ctx, desecConfig.GetNamespacedName(), &dnsCr); err != nil {
 		if !errors.IsNotFound(err) {
 			log.Error(err, "Failed to load CR", "req", req)
 			return ctrl.Result{}, err
 		}
 		// Initialize
-		dnsCr = util.InitializeDesecDns(desecClient.Domain, "cert-manager")
+		dnsCr = util.InitializeDesecDns(desecConfig.GetNamespacedName())
 		err := r.Client.Create(ctx, &dnsCr)
 		return ctrl.Result{Requeue: true}, err
 	}

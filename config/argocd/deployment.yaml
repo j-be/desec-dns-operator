@@ -12,7 +12,7 @@ spec:
         - name: desec-config
           mountPath: /mnt/config
           readOnly: true
-        - name: desec-desec
+        - name: desec-secret
           mountPath: /mnt/secret
           readOnly: true
       volumes:

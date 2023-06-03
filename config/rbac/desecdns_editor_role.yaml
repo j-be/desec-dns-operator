@@ -1,0 +1,31 @@
+# permissions for end users to edit desecdns.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: desecdns-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: desec-dns-operator
+    app.kubernetes.io/part-of: desec-dns-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: desecdns-editor-role
+rules:
+- apiGroups:
+  - desec.owly.dedyn.io
+  resources:
+  - desecdns
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - desec.owly.dedyn.io
+  resources:
+  - desecdns/status
+  verbs:
+  - get

@@ -1,0 +1,12 @@
+apiVersion: desec.owly.dedyn.io/v1
+kind: DesecDns
+metadata:
+  labels:
+    app.kubernetes.io/name: desecdns
+    app.kubernetes.io/instance: desecdns-sample
+    app.kubernetes.io/part-of: desec-dns-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: desec-dns-operator
+  name: desecdns-sample
+spec:
+  # TODO(user): Add fields here

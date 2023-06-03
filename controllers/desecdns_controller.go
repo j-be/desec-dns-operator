@@ -25,7 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -61,11 +60,11 @@ func (r *DesecDnsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	log.Info("Starting", "req", req)
 
 	// Create deSEC client
-	desecClient := desec.NewClient("great-horned-owl.dedyn.io", util.TOKEN)
+	desecClient := desec.NewClient(req.Name, util.TOKEN)
 
 	// Fetch CR
 	dnsCr := v1.DesecDns{}
-	if err := r.Client.Get(ctx, types.NamespacedName{Namespace: "cert-manager", Name: desecClient.Domain}, &dnsCr); err != nil {
+	if err := r.Client.Get(ctx, req.NamespacedName, &dnsCr); err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("CR not found, not doing anything", "req", req)
 			return ctrl.Result{}, nil

@@ -59,13 +59,6 @@ func (r *DesecDnsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	log.Info("Starting", "req", req)
 
-	// Create deSEC client
-	desecClient, err := desec.NewClient(req.Name)
-	if err != nil {
-		log.Error(err, "Cannot create client")
-		return ctrl.Result{}, err
-	}
-
 	// Fetch CR
 	dnsCr := v1.DesecDns{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &dnsCr); err != nil {
@@ -76,20 +69,31 @@ func (r *DesecDnsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{Requeue: true}, err
 	}
 
-	// Update IP
-	log.Info("Updating IP")
+	// Get and check IPs
 	ips := dnsCr.Spec.IPs
-	if err := desecClient.UpdateIp(ips); err != nil {
+	if len(ips) == 0 {
+		log.Info("Np IPs, not doing anything", "req", req)
+		return ctrl.Result{}, nil
+	}
+
+	// Create deSEC client
+	desecClient, err := desec.NewClient(req.Name)
+	if err != nil {
+		log.Error(err, "Cannot create client")
 		return ctrl.Result{}, err
 	}
 
-	if util.UpdateDesecDnsStatus(
-		&dnsCr.Status,
-		"IpUpdate",
-		metav1.ConditionTrue,
-		"Updated",
-		fmt.Sprintf("Updated to: [%s]", strings.Join(ips, ", ")),
-	) {
+	// Update IPs
+	log.Info("Updating IPs")
+	statusUpdate := false
+	if err := desecClient.UpdateIp(ips); err != nil {
+		statusUpdate = util.UpdateDesecDnsStatus(&dnsCr.Status, "IpUpdate", metav1.ConditionFalse, "Error", err.Error())
+	} else {
+		message := fmt.Sprintf("Updated to: [%s]", strings.Join(ips, ", "))
+		statusUpdate = util.UpdateDesecDnsStatus(&dnsCr.Status, "IpUpdate", metav1.ConditionTrue, "Updated", message)
+	}
+
+	if statusUpdate {
 		err = r.Client.Status().Update(ctx, &dnsCr)
 	}
 	return ctrl.Result{Requeue: true, RequeueAfter: 5 * time.Minute}, err

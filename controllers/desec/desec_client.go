@@ -7,20 +7,47 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-
-	"golang.org/x/exp/slices"
 )
-
-const desecBase = "https://desec.io/api/v1/domains/"
-const updateIp = "https://update.dedyn.io"
 
 type Client struct {
 	Domain string
-	Token  string
+	scheme string
+	token  string
+
+	mgmtHost     string
+	updateIpHost string
+}
+
+func (c Client) getMgmtBaseUrl() string {
+	baseUrl := url.URL{
+		Scheme: c.scheme,
+		Host:   c.mgmtHost,
+		Path:   "api/v1/domains/",
+	}
+	return baseUrl.String()
+}
+
+func (c Client) getUpdateIpBaseUrl() string {
+	baseUrl := url.URL{
+		Scheme: c.scheme,
+		Host:   c.updateIpHost,
+	}
+	return baseUrl.String()
+}
+
+func NewClient(domain string, token string) Client {
+	return Client{
+		Domain: domain,
+		scheme: "https",
+		token:  token,
+
+		mgmtHost:     "desec.io",
+		updateIpHost: "update.dedyn.io",
+	}
 }
 
 func get[T any](url string, token string, dest *T) error {
-	req, err := http.NewRequest(http.MethodGet, desecBase+url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return err
 	}
@@ -49,7 +76,7 @@ func post[T any, R any](url string, token string, payload R, dest *T) error {
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, desecBase+url, bytes.NewReader(payloadJson))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(payloadJson))
 	if err != nil {
 		return err
 	}
@@ -73,41 +100,10 @@ func post[T any, R any](url string, token string, payload R, dest *T) error {
 	return nil
 }
 
-func (c Client) GetOwnerOf(qname string) (*Domain, error) {
-	owners := []Domain{}
-
-	err := get("?owns_qname="+url.QueryEscape(qname), c.Token, &owners)
-	if err != nil {
-		return nil, err
-	} else if len(owners) == 0 {
-		return nil, nil
-	}
-
-	owner := owners[0]
-	return &owner, nil
-}
-
-func (c Client) GetOwnersOf(qnames []string) ([]string, error) {
-	domainOwner := []string{}
-	for _, qname := range qnames {
-		owner, _ := c.GetOwnerOf(qname)
-		var ownerName string
-		if owner == nil {
-			ownerName = qname
-		} else {
-			ownerName = owner.Name
-		}
-		if !slices.Contains(domainOwner, ownerName) {
-			domainOwner = append(domainOwner, ownerName)
-		}
-	}
-	return domainOwner, nil
-}
-
 func (c Client) GetDomains() ([]Domain, error) {
 	domains := []Domain{}
 
-	err := get("", c.Token, &domains)
+	err := get(c.getMgmtBaseUrl(), c.token, &domains)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +114,7 @@ func (c Client) GetDomains() ([]Domain, error) {
 func (c Client) GetRRSets() ([]RRSet, error) {
 	rrsets := []RRSet{}
 
-	err := get(c.Domain+"/rrsets/", c.Token, &rrsets)
+	err := get(c.getMgmtBaseUrl()+c.Domain+"/rrsets/", c.token, &rrsets)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +124,7 @@ func (c Client) GetRRSets() ([]RRSet, error) {
 
 func (c Client) CreateRRSet(rrset RRSet) (RRSet, error) {
 	dest := RRSet{}
-	err := post(rrset.Domain+"/rrsets/", c.Token, rrset, &dest)
+	err := post(c.getMgmtBaseUrl()+c.Domain+"/rrsets/", c.token, rrset, &dest)
 	return dest, err
 }
 
@@ -145,18 +141,23 @@ func (c Client) CreateCNAME(subname string) (RRSet, error) {
 
 func (c Client) CreateDomain() (Domain, error) {
 	dest := Domain{}
-	err := post("", c.Token, createDomainPayload{Name: c.Domain}, &dest)
+	err := post(c.getMgmtBaseUrl(), c.token, createDomainPayload{Name: c.Domain}, &dest)
 	return dest, err
 }
 
 func (c Client) UpdateIp(ips []string) error {
-	url := fmt.Sprintf("%s?hostname=%s&myip=%s", updateIp, url.QueryEscape(c.Domain), url.QueryEscape(strings.Join(ips, ",")))
+	url := fmt.Sprintf(
+		"%s?hostname=%s&myip=%s",
+		c.getUpdateIpBaseUrl(),
+		url.QueryEscape(c.Domain),
+		url.QueryEscape(strings.Join(ips, ",")),
+	)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return err
 	}
 
-	req.Header.Add("Authorization", "Token "+c.Token)
+	req.Header.Add("Authorization", "Token "+c.token)
 	resp, err := http.DefaultClient.Do(req)
 
 	if err == nil && resp.StatusCode != 200 {

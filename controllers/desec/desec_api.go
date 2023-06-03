@@ -8,7 +8,7 @@ type AuditInfo struct {
 type Domain struct {
 	AuditInfo
 	Name        string `json:"name"`
-	Minimum_ttl int    `json:"minimum_ttl"`
+	Minimum_TTL int64  `json:"minimum_ttl"`
 	Published   string `json:"published"`
 }
 

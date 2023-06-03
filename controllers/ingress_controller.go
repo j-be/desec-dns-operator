@@ -59,10 +59,7 @@ func (r *IngressReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	log.Info("Starting", "req", req)
 
 	// Create deSEC client
-	desecClient := desec.Client{
-		Domain: "great-horned-owl.dedyn.io",
-		Token:  util.TOKEN,
-	}
+	desecClient := desec.NewClient("great-horned-owl.dedyn.io", util.TOKEN)
 
 	// Fetch or create CR
 	dnsCr := v1.DesecDns{}

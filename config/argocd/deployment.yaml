@@ -11,7 +11,14 @@ spec:
         volumeMounts:
         - name: desec-config
           mountPath: /mnt/config
+          readOnly: true
+        - name: desec-desec
+          mountPath: /mnt/secret
+          readOnly: true
       volumes:
       - name: desec-config
         configMap:
           name: desec-dns-operator
+      - name: desec-secret
+        secret:
+          secretName: desec-dns-operator

@@ -10,8 +10,6 @@ import (
 	v1 "github.com/j-be/desec-dns-operator/api/v1"
 )
 
-const TOKEN = "<token>"
-
 func GetSubnames(ingress networkingv1.Ingress, domain string) []string {
 	suffix := "." + domain
 

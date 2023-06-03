@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 )
 
@@ -35,15 +36,20 @@ func (c Client) getUpdateIpBaseUrl() string {
 	return baseUrl.String()
 }
 
-func NewClient(domain string, token string) Client {
+func NewClient(domain string) (Client, error) {
+	token, err := os.ReadFile("./mnt/secret/token")
+	if err != nil {
+		return Client{}, err
+	}
+
 	return Client{
 		Domain: domain,
 		scheme: "https",
-		token:  token,
+		token:  string(token),
 
 		mgmtHost:     "desec.io",
 		updateIpHost: "update.dedyn.io",
-	}
+	}, nil
 }
 
 func get[T any](url string, token string, dest *T) error {

@@ -32,3 +32,6 @@ go.work
 *.swp
 *.swo
 *~
+
+# Local config
+/mnt

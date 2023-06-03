@@ -60,7 +60,11 @@ func (r *DesecDnsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	log.Info("Starting", "req", req)
 
 	// Create deSEC client
-	desecClient := desec.NewClient(req.Name, util.TOKEN)
+	desecClient, err := desec.NewClient(req.Name)
+	if err != nil {
+		log.Error(err, "Cannot create client")
+		return ctrl.Result{}, err
+	}
 
 	// Fetch CR
 	dnsCr := v1.DesecDns{}
@@ -79,7 +83,6 @@ func (r *DesecDnsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, err
 	}
 
-	var err error
 	if util.UpdateDesecDnsStatus(
 		&dnsCr.Status,
 		"IpUpdate",

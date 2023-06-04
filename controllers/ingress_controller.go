@@ -74,22 +74,22 @@ func (r *IngressReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	// Fetch or create CR
-	dnsCr := v1.DesecDns{}
-	if err := r.Client.Get(ctx, desecConfig.GetNamespacedName(), &dnsCr); err != nil {
+	dnsCr := new(v1.DesecDns)
+	if err := r.Client.Get(ctx, desecConfig.GetNamespacedName(), dnsCr); err != nil {
 		if !errors.IsNotFound(err) {
 			log.Error(err, "Failed to load CR", "req", req)
 			return ctrl.Result{}, err
 		}
 		// Initialize
 		dnsCr = util.InitializeDesecDns(desecConfig.GetNamespacedName())
-		err := r.Client.Create(ctx, &dnsCr)
+		err := r.Client.Create(ctx, dnsCr)
 		return ctrl.Result{Requeue: true}, err
 	}
 
 	// Initialize status
 	if len(dnsCr.Status.Conditions) == 0 {
 		dnsCr.Status = util.InitializeDesecDnsStatus()
-		err := r.Client.Status().Update(ctx, &dnsCr)
+		err := r.Client.Status().Update(ctx, dnsCr)
 		return ctrl.Result{Requeue: true}, err
 	}
 
@@ -104,7 +104,7 @@ func (r *IngressReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{Requeue: true}, err
 	}
 	if util.UpdateDesecDnsStatus(&dnsCr.Status, "Domain", metav1.ConditionTrue, "Created", "") {
-		err := r.Client.Status().Update(ctx, &dnsCr)
+		err := r.Client.Status().Update(ctx, dnsCr)
 		return ctrl.Result{Requeue: true}, err
 	}
 
@@ -120,7 +120,7 @@ func (r *IngressReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	slices.Sort(ips)
 	if !slices.Equal(ips, dnsCr.Spec.IPs) {
 		dnsCr.Spec.IPs = ips
-		err := r.Client.Update(ctx, &dnsCr)
+		err := r.Client.Update(ctx, dnsCr)
 		return ctrl.Result{Requeue: true}, err
 	}
 
@@ -136,7 +136,7 @@ func (r *IngressReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			return ctrl.Result{Requeue: true}, err
 		}
 		if util.UpdateDesecDnsStatus(&dnsCr.Status, subname, metav1.ConditionTrue, "Created", "") {
-			err := r.Client.Status().Update(ctx, &dnsCr)
+			err := r.Client.Status().Update(ctx, dnsCr)
 			return ctrl.Result{Requeue: true}, err
 		}
 	}

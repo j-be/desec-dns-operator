@@ -32,8 +32,8 @@ func GetIps(ingress networkingv1.Ingress) []string {
 	return ips
 }
 
-func InitializeDesecDns(namespacedName types.NamespacedName) v1.DesecDns {
-	cr := v1.DesecDns{}
+func InitializeDesecDns(namespacedName types.NamespacedName) *v1.DesecDns {
+	cr := new(v1.DesecDns)
 	cr.ObjectMeta.Name = namespacedName.Name
 	cr.ObjectMeta.Namespace = namespacedName.Namespace
 	cr.Spec.IPs = []string{}
@@ -44,17 +44,13 @@ func InitializeDesecDnsStatus() v1.DesecDnsStatus {
 	status := v1.DesecDnsStatus{
 		Conditions: []metav1.Condition{},
 	}
-	meta.SetStatusCondition(&status.Conditions, metav1.Condition{
-		Type:   "Domain",
-		Status: metav1.ConditionUnknown,
-		Reason: "Initializing",
-	})
-
-	meta.SetStatusCondition(&status.Conditions, metav1.Condition{
-		Type:   "IpUpdate",
-		Status: metav1.ConditionUnknown,
-		Reason: "Initializing",
-	})
+	for _, conditionType := range []string{"Domain", "IpUpdate"} {
+		meta.SetStatusCondition(&status.Conditions, metav1.Condition{
+			Type:   conditionType,
+			Status: metav1.ConditionUnknown,
+			Reason: "Initializing",
+		})
+	}
 
 	return status
 }

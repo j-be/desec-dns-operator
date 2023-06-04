@@ -39,7 +39,8 @@ func TestIngressReconciler(t *testing.T) {
 				case "GET":
 					body, err := json.Marshal(domains)
 					assert.NoError(t, err)
-					w.Write(body)
+					_, err = w.Write(body)
+					assert.NoError(t, err)
 				case "POST":
 					body, err := io.ReadAll(r.Body)
 					assert.NoError(t, err)
@@ -57,7 +58,8 @@ func TestIngressReconciler(t *testing.T) {
 				case "GET":
 					body, err := json.Marshal(rrsets)
 					assert.NoError(t, err)
-					w.Write(body)
+					_, err = w.Write(body)
+					assert.NoError(t, err)
 				case "POST":
 					body, err := io.ReadAll(r.Body)
 					assert.NoError(t, err)
@@ -207,8 +209,8 @@ func createIngressReconciler(t *testing.T, serverUrl string) IngressReconciler {
 	}
 
 	mockScheme := runtime.NewScheme()
-	v1.AddToScheme(mockScheme)
-	netv1.AddToScheme(mockScheme)
+	assert.NoError(t, v1.AddToScheme(mockScheme))
+	assert.NoError(t, netv1.AddToScheme(mockScheme))
 
 	fakeClient := fake.NewClientBuilder().
 		WithScheme(mockScheme).

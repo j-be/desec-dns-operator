@@ -13,8 +13,8 @@ var NamespacedName = types.NamespacedName{Name: "some-domain.dedyn.io", Namespac
 
 func CreateConfigDir(t *testing.T, serverUrl string) string {
 	dir := t.TempDir()
-	os.Mkdir(dir+"/config", fs.ModePerm)
-	os.Mkdir(dir+"/secret", fs.ModePerm)
+	runtime.Must(os.Mkdir(dir+"/config", fs.ModePerm))
+	runtime.Must(os.Mkdir(dir+"/secret", fs.ModePerm))
 
 	runtime.Must(os.WriteFile(dir+"/config/domain", []byte("some-domain.dedyn.io"), fs.ModePerm))
 	runtime.Must(os.WriteFile(dir+"/config/namespace", []byte("desec-dns-operator"), fs.ModePerm))

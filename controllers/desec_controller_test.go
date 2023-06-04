@@ -116,7 +116,7 @@ func createDesecDnsReconciler(t *testing.T, serverUrl string, ips []string) Dese
 	}
 
 	mockScheme := runtime.NewScheme()
-	v1.AddToScheme(mockScheme)
+	assert.NoError(t, v1.AddToScheme(mockScheme))
 
 	fakeClient := fake.NewClientBuilder().
 		WithScheme(mockScheme).

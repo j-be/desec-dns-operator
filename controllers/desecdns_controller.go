@@ -87,7 +87,7 @@ func (r *DesecDnsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	// Update IPs
 	log.Info("Updating IPs")
 	statusUpdate := false
-	if err := desecClient.UpdateIp(ips); err != nil {
+	if err = desecClient.UpdateIp(ips); err != nil {
 		statusUpdate = util.UpdateDesecDnsStatus(&dnsCr.Status, "IpUpdate", metav1.ConditionFalse, "Error", err.Error())
 	} else {
 		message := fmt.Sprintf("Updated to: [%s]", strings.Join(ips, ", "))
@@ -95,7 +95,9 @@ func (r *DesecDnsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	}
 
 	if statusUpdate {
-		err = r.Client.Status().Update(ctx, &dnsCr)
+		if err := r.Client.Status().Update(ctx, &dnsCr); err != nil {
+			return ctrl.Result{}, err
+		}
 	}
 	return ctrl.Result{Requeue: true, RequeueAfter: 5 * time.Minute}, err
 }

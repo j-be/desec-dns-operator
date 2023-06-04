@@ -11,12 +11,12 @@ type Config struct {
 	Namespace string
 }
 
-func NewConfigFor() (Config, error) {
-	domain, err := os.ReadFile("./mnt/config/domain")
+func NewConfigFor(configDir string) (Config, error) {
+	domain, err := os.ReadFile(configDir + "/config/domain")
 	if err != nil {
 		return Config{}, err
 	}
-	namespace, err := os.ReadFile("./mnt/config/namespace")
+	namespace, err := os.ReadFile(configDir + "/config/namespace")
 	if err != nil {
 		return Config{}, err
 	}

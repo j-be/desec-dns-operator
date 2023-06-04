@@ -38,7 +38,8 @@ import (
 // DesecDnsReconciler reconciles a DesecDns object
 type DesecDnsReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme    *runtime.Scheme
+	ConfigDir string
 }
 
 //+kubebuilder:rbac:groups=desec.owly.dedyn.io,resources=desecdns,verbs=get;list;watch;create;update;patch;delete
@@ -77,7 +78,7 @@ func (r *DesecDnsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	}
 
 	// Create deSEC client
-	desecClient, err := desec.NewClient(req.Name)
+	desecClient, err := desec.NewClient(req.Name, r.ConfigDir)
 	if err != nil {
 		log.Error(err, "Cannot create client")
 		return ctrl.Result{}, err
@@ -101,6 +102,7 @@ func (r *DesecDnsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *DesecDnsReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	r.ConfigDir = "./mnt"
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1.DesecDns{}).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).

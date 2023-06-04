@@ -26,8 +26,8 @@ func (c Client) getUpdateIpBaseUrl() string {
 	return c.updateIpHost
 }
 
-func NewClient(domain string) (Client, error) {
-	token, err := os.ReadFile("./mnt/secret/token")
+func NewClient(domain string, configDir string) (Client, error) {
+	token, err := os.ReadFile(configDir + "/secret/token")
 	if err != nil {
 		return Client{}, err
 	}

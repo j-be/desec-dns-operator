@@ -37,7 +37,8 @@ import (
 // IngressReconciler reconciles a DesecDns object
 type IngressReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme    *runtime.Scheme
+	ConfigDir string
 }
 
 //+kubebuilder:rbac:groups=desec.owly.dedyn.io,resources=desecdns,verbs=get;list;watch;create;update;patch;delete
@@ -59,12 +60,12 @@ func (r *IngressReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	log.Info("Starting", "req", req)
 
 	// Create deSEC client
-	desecConfig, err := config.NewConfigFor()
+	desecConfig, err := config.NewConfigFor(r.ConfigDir)
 	if err != nil {
 		log.Error(err, "Failed to read the configuration")
 		return ctrl.Result{}, err
 	}
-	desecClient, err := desec.NewClient(desecConfig.Domain)
+	desecClient, err := desec.NewClient(desecConfig.Domain, r.ConfigDir)
 	if err != nil {
 		log.Error(err, "Cannot create client")
 		return ctrl.Result{}, err
@@ -143,6 +144,7 @@ func (r *IngressReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *IngressReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	r.ConfigDir = "./mnt"
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&networkingv1.Ingress{}).
 		Complete(r)

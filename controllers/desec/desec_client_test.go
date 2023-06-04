@@ -6,7 +6,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/j-be/desec-dns-operator/controllers/util"
 	"github.com/stretchr/testify/assert"
+	"k8s.io/apimachinery/pkg/util/runtime"
 )
 
 const mockDomain = `{"created":"2023-06-02T18:28:14.745468Z","published":"2023-06-02T18:29:36.137504Z","name":"some-domain.dedyn.io","minimum_ttl":60,"touched":"2023-06-02T18:46:49.868553Z"}`
@@ -21,20 +23,11 @@ const mockRrsets = "[" + mockCname + `,
 	{"created":"2017-11-07T14:17:29.284000Z","domain":"some-domain.dedyn.io","subname":"","name":"some-domain.dedyn.io.","records":["ns1.desec.io.","ns2.desec.org."],"ttl":60,"type":"NS","touched":"2017-11-07T14:17:29.284000Z"}
 ]`
 
-func createMgmtClient(server *httptest.Server) Client {
-	return Client{
-		Domain:   "some-domain.dedyn.io",
-		token:    "I'm a token",
-		mgmtHost: server.URL,
-	}
-}
-
-func createUpdateIpClient(server *httptest.Server) Client {
-	return Client{
-		Domain:       "some-domain.dedyn.io",
-		token:        "I'm a token",
-		updateIpHost: server.URL,
-	}
+func createClient(t *testing.T, server *httptest.Server) Client {
+	configDir := util.CreateConfigDir(t, server.URL)
+	client, err := NewClient("some-domain.dedyn.io", configDir)
+	runtime.Must(err)
+	return client
 }
 
 func TestGetDomains(t *testing.T) {
@@ -48,7 +41,7 @@ func TestGetDomains(t *testing.T) {
 			assert.NoError(t, err)
 		}))
 		defer server.Close()
-		var client = createMgmtClient(server)
+		var client = createClient(t, server)
 		// When
 		domains, err := client.GetDomains()
 		// Then
@@ -71,7 +64,7 @@ func TestGetRrset(t *testing.T) {
 			assert.NoError(t, err)
 		}))
 		defer server.Close()
-		var client = createMgmtClient(server)
+		var client = createClient(t, server)
 		// When
 		rrsets, err := client.GetRRSets()
 		// Then
@@ -127,7 +120,7 @@ func TestCreateCNAME(t *testing.T) {
 			assert.NoError(t, err)
 		}))
 		defer server.Close()
-		var client = createMgmtClient(server)
+		var client = createClient(t, server)
 		// When
 		cname, err := client.CreateCNAME("www")
 		// Then
@@ -153,7 +146,7 @@ func TestCreateDomain(t *testing.T) {
 			assert.NoError(t, err)
 		}))
 		defer server.Close()
-		var client = createMgmtClient(server)
+		var client = createClient(t, server)
 		// When
 		domain, err := client.CreateDomain()
 		// Then
@@ -176,7 +169,7 @@ func TestUpdateIp(t *testing.T) {
 			assert.NoError(t, err)
 		}))
 		defer server.Close()
-		var client = createUpdateIpClient(server)
+		var client = createClient(t, server)
 		// When
 		err := client.UpdateIp([]string{"1.2.3.4", "2.3.4.5"})
 		// Then

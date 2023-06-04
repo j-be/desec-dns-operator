@@ -31,13 +31,21 @@ func NewClient(domain string, configDir string) (Client, error) {
 	if err != nil {
 		return Client{}, err
 	}
+	mgmtHost, err := os.ReadFile(configDir + "/config/mgmtHost")
+	if err != nil {
+		mgmtHost = []byte("https://desec.io")
+	}
+	updateIpHost, err := os.ReadFile(configDir + "/config/updateIpHost")
+	if err != nil {
+		updateIpHost = []byte("https://update.dedyn.io")
+	}
 
 	return Client{
 		Domain: domain,
 		token:  string(token),
 
-		mgmtHost:     "https://desec.io",
-		updateIpHost: "https://update.dedyn.io",
+		mgmtHost:     string(mgmtHost),
+		updateIpHost: string(updateIpHost),
 	}, nil
 }
 

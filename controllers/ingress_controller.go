@@ -100,6 +100,11 @@ func (r *IngressReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 	if !slices.ContainsFunc(domains, func(domain desec.Domain) bool { return domain.Name == desecClient.Domain }) {
+		if util.UpdateDesecDnsStatus(&dnsCr.Status, "Domain", metav1.ConditionFalse, "Creating", "") {
+			if err := r.Client.Status().Update(ctx, dnsCr); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
 		_, err := desecClient.CreateDomain()
 		return ctrl.Result{Requeue: true}, err
 	}
@@ -129,6 +134,11 @@ func (r *IngressReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	for _, subname := range util.GetSubnames(ingress, desecClient.Domain) {
 		if !slices.ContainsFunc(rrsets, func(rrset desec.RRSet) bool { return rrset.Type == "CNAME" && rrset.Subname == subname }) {
 			log.Info("Adding CNAME", "subname", subname, "domain", desecClient.Domain)
+			if util.UpdateDesecDnsStatus(&dnsCr.Status, subname, metav1.ConditionFalse, "Creating", "") {
+				if err := r.Client.Status().Update(ctx, dnsCr); err != nil {
+					return ctrl.Result{}, err
+				}
+			}
 			cname, err := desecClient.CreateCNAME(subname)
 			if err == nil {
 				log.Info("CNAME created", "cname", cname)

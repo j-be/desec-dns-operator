@@ -5,8 +5,11 @@ import (
 	"os"
 	"testing"
 
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/runtime"
 )
+
+var NamespacedName = types.NamespacedName{Name: "some-domain.dedyn.io", Namespace: "desec-dns-operator"}
 
 func CreateConfigDir(t *testing.T, serverUrl string) string {
 	dir := t.TempDir()

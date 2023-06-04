@@ -22,22 +22,18 @@ const mockRrsets = "[" + mockCname + `,
 ]`
 
 func createMgmtClient(server *httptest.Server) Client {
-	host := server.Listener.Addr().String()
 	return Client{
 		Domain:   "some-domain.dedyn.io",
-		scheme:   "http",
 		token:    "I'm a token",
-		mgmtHost: host,
+		mgmtHost: server.URL,
 	}
 }
 
 func createUpdateIpClient(server *httptest.Server) Client {
-	host := server.Listener.Addr().String()
 	return Client{
 		Domain:       "some-domain.dedyn.io",
-		scheme:       "http",
 		token:        "I'm a token",
-		updateIpHost: host,
+		updateIpHost: server.URL,
 	}
 }
 

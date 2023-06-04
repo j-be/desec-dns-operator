@@ -12,7 +12,6 @@ import (
 
 type Client struct {
 	Domain string
-	scheme string
 	token  string
 
 	mgmtHost     string
@@ -20,20 +19,11 @@ type Client struct {
 }
 
 func (c Client) getMgmtBaseUrl() string {
-	baseUrl := url.URL{
-		Scheme: c.scheme,
-		Host:   c.mgmtHost,
-		Path:   "api/v1/domains/",
-	}
-	return baseUrl.String()
+	return c.mgmtHost + "/api/v1/domains/"
 }
 
 func (c Client) getUpdateIpBaseUrl() string {
-	baseUrl := url.URL{
-		Scheme: c.scheme,
-		Host:   c.updateIpHost,
-	}
-	return baseUrl.String()
+	return c.updateIpHost
 }
 
 func NewClient(domain string) (Client, error) {
@@ -44,11 +34,10 @@ func NewClient(domain string) (Client, error) {
 
 	return Client{
 		Domain: domain,
-		scheme: "https",
 		token:  string(token),
 
-		mgmtHost:     "desec.io",
-		updateIpHost: "update.dedyn.io",
+		mgmtHost:     "https://desec.io",
+		updateIpHost: "https://update.dedyn.io",
 	}, nil
 }
 

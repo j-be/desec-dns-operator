@@ -31,7 +31,6 @@ rules:
   - get
   - patch
   - update
-# Ingress
 - apiGroups:
   - networking.k8s.io
   resources:

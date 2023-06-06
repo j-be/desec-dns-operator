@@ -21,4 +21,4 @@ spec:
           name: desec-dns-operator
       - name: desec-secret
         secret:
-          secretName: desec-dns-operator
+          secretName: desec-token

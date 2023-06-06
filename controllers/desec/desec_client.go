@@ -95,34 +95,19 @@ func post[T any, R any](url string, token string, payload R, dest *T) error {
 		return fmt.Errorf("got status %d while trying to POST %v", res.StatusCode, payload)
 	}
 
-	err = json.NewDecoder(res.Body).Decode(dest)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return json.NewDecoder(res.Body).Decode(dest)
 }
 
 func (c Client) GetDomains() ([]Domain, error) {
-	domains := []Domain{}
-
+	domains := make([]Domain, 0)
 	err := get(c.getMgmtBaseUrl(), c.token, &domains)
-	if err != nil {
-		return nil, err
-	}
-
-	return domains, nil
+	return domains, err
 }
 
 func (c Client) GetRRSets() ([]RRSet, error) {
-	rrsets := []RRSet{}
-
+	rrsets := make([]RRSet, 0)
 	err := get(c.getMgmtBaseUrl()+c.Domain+"/rrsets/", c.token, &rrsets)
-	if err != nil {
-		return nil, err
-	}
-
-	return rrsets, nil
+	return rrsets, err
 }
 
 func (c Client) CreateRRSet(rrset RRSet) (RRSet, error) {

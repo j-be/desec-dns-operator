@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/j-be/desec-dns-operator/controllers/util"
@@ -174,5 +175,27 @@ func TestUpdateIp(t *testing.T) {
 		err := client.UpdateIp([]string{"1.2.3.4", "2.3.4.5"})
 		// Then
 		assert.NoError(t, err)
+	})
+}
+
+func TestNewClient(t *testing.T) {
+	t.Run("TestDefaults", func(t *testing.T) {
+		// Given
+		tmpDir := t.TempDir()
+		assert.NoError(t, os.Mkdir(tmpDir+"/secret", os.ModePerm))
+		assert.NoError(t, os.WriteFile(tmpDir+"/secret/token", []byte("the-token"), os.ModePerm))
+		// When
+		client, err := NewClient("the-domain", tmpDir)
+		assert.NoError(t, err)
+		// Then
+		assert.Equal(t, "the-domain", client.Domain)
+		assert.Equal(t, "the-token", client.token)
+		assert.Equal(t, "https://desec.io", client.mgmtHost)
+		assert.Equal(t, "https://update.dedyn.io", client.updateIpHost)
+	})
+
+	t.Run("TestNoTokenNoParty", func(t *testing.T) {
+		_, err := NewClient("the-domain", "/IDoNotExist")
+		assert.EqualError(t, err, "open /IDoNotExist/secret/token: no such file or directory")
 	})
 }

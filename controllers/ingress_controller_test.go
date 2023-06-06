@@ -188,6 +188,31 @@ func TestIngressReconciler(t *testing.T) {
 			assert.Equal(t, "Initializing", ipUpdateCondition.Reason)
 		}
 	})
+
+	t.Run("Not doing anything if not found", func(t *testing.T) {
+		// Given
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "/api/v1/domains/", r.URL.Path)
+			assert.Equal(t, "GET", r.Method)
+			body, err := json.Marshal([]desec.Domain{{Name: "some-domain.dedyn.io"}})
+			assert.NoError(t, err)
+			_, err = w.Write(body)
+			assert.NoError(t, err)
+		}))
+		defer server.Close()
+		reconciler := createIngressReconciler(t, server.URL)
+		request := reconcile.Request{NamespacedName: types.NamespacedName{Name: "IDoNotExist", Namespace: ingressRequest.Namespace}}
+		for i := 0; i < 3; i = i + 1 {
+			_, err := reconciler.Reconcile(context.TODO(), request)
+			assert.NoError(t, err)
+		}
+		// When
+		result, err := reconciler.Reconcile(context.TODO(), request)
+		// Then
+		assert.EqualError(t, err, `ingresses.networking.k8s.io "IDoNotExist" not found`)
+		assert.False(t, result.Requeue)
+		assert.True(t, result.IsZero())
+	})
 }
 
 func createIngressReconciler(t *testing.T, serverUrl string) IngressReconciler {

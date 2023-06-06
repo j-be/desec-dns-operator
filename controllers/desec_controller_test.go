@@ -13,6 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -104,6 +105,22 @@ func TestDesecDnsReconciler(t *testing.T) {
 			assert.Equal(t, "Error", condition.Reason)
 			assert.Equal(t, "got status code 404", condition.Message)
 		}
+	})
+
+	t.Run("Not doing anything if not found", func(t *testing.T) {
+		// Given
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(404) }))
+		defer server.Close()
+		reconciler := createDesecDnsReconciler(t, server.URL, []string{"1.2.3.4"})
+		// When
+		result, err := reconciler.Reconcile(context.TODO(), reconcile.Request{NamespacedName: types.NamespacedName{
+			Name:      "IDoNotExist",
+			Namespace: util.NamespacedName.Namespace,
+		}})
+		// Then
+		assert.NoError(t, err)
+		assert.False(t, result.Requeue)
+		assert.True(t, result.IsZero())
 	})
 }
 

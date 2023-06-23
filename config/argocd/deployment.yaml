@@ -17,11 +17,11 @@ spec:
       - name: kube-rbac-proxy
         securityContext:
           readOnlyRootFilesystem: true
-          priviledged: false
+          privileged: false
       - name: manager
         securityContext:
           readOnlyRootFilesystem: true
-          priviledged: false
+          privileged: false
         volumeMounts:
         - name: desec-config
           mountPath: /mnt/config

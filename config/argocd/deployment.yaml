@@ -11,12 +11,17 @@ spec:
         container.apparmor.security.beta.kubernetes.io/kube-rbac-proxy: runtime/default
     spec:
       securityContext:
-        readOnlyRootFilesystem: true
-        priviledged: false
         seccompProfile:
           type: RuntimeDefault
       containers:
+      - name: kube-rbac-proxy
+        securityContext:
+          readOnlyRootFilesystem: true
+          priviledged: false
       - name: manager
+        securityContext:
+          readOnlyRootFilesystem: true
+          priviledged: false
         volumeMounts:
         - name: desec-config
           mountPath: /mnt/config

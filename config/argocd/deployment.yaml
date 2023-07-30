@@ -5,23 +5,9 @@ metadata:
   namespace: system
 spec:
   template:
-    metadata:
-      annotations:
-        container.apparmor.security.beta.kubernetes.io/manager: runtime/default
-        container.apparmor.security.beta.kubernetes.io/kube-rbac-proxy: runtime/default
     spec:
-      securityContext:
-        seccompProfile:
-          type: RuntimeDefault
       containers:
-      - name: kube-rbac-proxy
-        securityContext:
-          readOnlyRootFilesystem: true
-          privileged: false
       - name: manager
-        securityContext:
-          readOnlyRootFilesystem: true
-          privileged: false
         volumeMounts:
         - name: desec-config
           mountPath: /mnt/config

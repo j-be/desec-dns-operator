@@ -24,6 +24,9 @@ metadata:
     app.kubernetes.io/created-by: desec-dns-operator
     app.kubernetes.io/part-of: desec-dns-operator
     app.kubernetes.io/managed-by: kustomize
+  annotations:
+    container.apparmor.security.beta.kubernetes.io/manager: runtime/default
+    container.apparmor.security.beta.kubernetes.io/kube-rbac-proxy: runtime/default
 spec:
   selector:
     matchLabels:
@@ -58,13 +61,8 @@ spec:
       #               - linux
       securityContext:
         runAsNonRoot: true
-        # TODO(user): For common cases that do not require escalating privileges
-        # it is recommended to ensure that all your Pods/Containers are restrictive.
-        # More info: https://kubernetes.io/docs/concepts/security/pod-security-standards/#restricted
-        # Please uncomment the following code if your project does NOT have to work on old Kubernetes
-        # versions < 1.19 or on vendors versions which do NOT support this field by default (i.e. Openshift < 4.11 ).
-        # seccompProfile:
-        #   type: RuntimeDefault
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - command:
         - /manager
@@ -77,6 +75,8 @@ spec:
           capabilities:
             drop:
               - "ALL"
+          privileged: false
+          readOnlyRootFilesystem: true
         livenessProbe:
           httpGet:
             path: /healthz

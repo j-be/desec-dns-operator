@@ -1,10 +1,89 @@
 # desec-dns-operator
-// TODO(user): Add simple overview of use/purpose
+A Kubernetes operator to create and update [deSEC](https://desec.io/) domains.
 
 ## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+This operator will manage your deSEC domains based on information in your `Ingress` resources.
+You can also add domains manually using the provided CRD.
 
-## Getting Started
+This project is still experimental and should be used with caution.
+
+## Installation
+
+The installation is based on [Kustomize](https://kustomize.io/).
+We assume you are familiar with it.
+
+The operator takes reads its config, as well as the credentials form file.
+The imho. easiest way to provide those is via mounting a `ConfigMap` and a `Secret` as volumes to `/mnt/config` and `/mnt/secret` respectively.
+
+First of all, you'll need a `ConfigMap` like:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: desec-dns-operator
+data:
+  domain: your-domain.dedyn.io
+  namespace: desec-dns-operator
+```
+
+You may also use Kustomize's `configMapGenerator`, or any other way to provide the `ConfigMap`.
+
+As `domain` provide a domain on deSEC.io. Either choose one you already own, or one that does not exist yet.
+If the domain does not exist yet, the operator will create it.
+
+**Beware:** If the domain already exists, the operator will overwrite the IP associated with it.
+The operator assumes this domain is only used for the cluster the operator is running in.
+If that is not the case for you **DO NOT USE THE OPERATOR** as is.
+
+For `namespace` choose any existing Kubernetes namespace.
+This is the namespace where the Custom Resources associated with the domains will be created.
+If you don't have a reason not to, simply use the namespace which contains the operator itself,
+
+Next, you need a `Secret` containing your deSEC token.
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: desec-token
+type: Opaque
+data:
+  token: <your-token-as-Base64>
+```
+
+Finally, add those to your `Deployment` and set the image tag to the version you want to deploy (see [here](https://github.com/j-be/desec-dns-operator/pkgs/container/desec-dns-operator) for all available versions) using a `kustomization.yaml`:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+spec:
+  template:
+    spec:
+      containers:
+      - name: manager
+        image: ghcr.io/j-be/desec-dns-operator:<the-version-to-be-deployed>
+        volumeMounts:
+        - name: desec-config
+          mountPath: /mnt/config
+          readOnly: true
+        - name: desec-secret
+          mountPath: /mnt/secret
+          readOnly: true
+      volumes:
+      - name: desec-config
+        configMap:
+          name: desec-dns-operator
+      - name: desec-secret
+        secret:
+          secretName: desec-token
+```
+
+That's it, deploy using Kustomize and enjoy.
+
+## Development - Getting Started
 You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
 **Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
 
@@ -42,7 +121,9 @@ make undeploy
 ```
 
 ## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
+If you can: fork, patch, push, PR.
+
+If not, consider leaving an issue and we can discuss stuff there.
 
 ### How it works
 This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/).

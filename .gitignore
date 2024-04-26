@@ -35,6 +35,3 @@ go.work
 
 # Local config
 /mnt
-
-# Generated files
-config/crd/bases/desec.owly.dedyn.io_desecdnsdnses.yaml

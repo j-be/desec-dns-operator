@@ -13,3 +13,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      ginkgo-and-gomega:
+        patterns:
+        - github.com/onsi/ginkgo/v2
+        - github.com/onsi/gomega

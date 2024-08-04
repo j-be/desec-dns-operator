@@ -9,12 +9,11 @@ updates:
         patterns:
         - "k8s.io/*"
         - "sigs.k8s.io/*"
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    groups:
       ginkgo-and-gomega:
         patterns:
         - github.com/onsi/ginkgo/v2
         - github.com/onsi/gomega
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"

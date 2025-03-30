@@ -62,7 +62,7 @@ func (r *DesecDnsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	// Fetch CR
 	dnsCr := v1.DesecDns{}
-	if err := r.Client.Get(ctx, req.NamespacedName, &dnsCr); err != nil {
+	if err := r.Get(ctx, req.NamespacedName, &dnsCr); err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("CR not found, not doing anything", "req", req)
 			return ctrl.Result{}, nil

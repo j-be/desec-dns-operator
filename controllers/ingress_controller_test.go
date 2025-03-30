@@ -171,13 +171,13 @@ func TestIngressReconciler(t *testing.T) {
 		}
 		// Do nothing
 		{
-			resourceVersion := dnsCr.ObjectMeta.ResourceVersion
+			resourceVersion := dnsCr.ResourceVersion
 			for i := 0; i < 5; i = i + 1 {
 				result, err := reconciler.Reconcile(context.TODO(), ingressRequest)
 				assert.NoError(t, err)
 				assert.True(t, result.IsZero())
 				assert.NoError(t, reconciler.Get(context.TODO(), util.NamespacedName, dnsCr))
-				assert.Equal(t, resourceVersion, dnsCr.ObjectMeta.ResourceVersion)
+				assert.Equal(t, resourceVersion, dnsCr.ResourceVersion)
 			}
 		}
 		// Make sure IpUpdate condition wasn't touched

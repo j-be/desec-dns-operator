@@ -34,8 +34,8 @@ func GetIps(ingress networkingv1.Ingress) []string {
 
 func InitializeDesecDns(namespacedName types.NamespacedName) *v1.DesecDns {
 	cr := new(v1.DesecDns)
-	cr.ObjectMeta.Name = namespacedName.Name
-	cr.ObjectMeta.Namespace = namespacedName.Namespace
+	cr.Name = namespacedName.Name
+	cr.Namespace = namespacedName.Namespace
 	cr.Spec.IPs = []string{}
 	return cr
 }

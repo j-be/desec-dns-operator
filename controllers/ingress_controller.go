@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"time"
 
 	"golang.org/x/exp/slices"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -83,14 +84,14 @@ func (r *IngressReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		// Initialize
 		dnsCr = util.InitializeDesecDns(desecConfig.GetNamespacedName())
 		err := r.Create(ctx, dnsCr)
-		return ctrl.Result{Requeue: true}, err
+		return ctrl.Result{Requeue: true, RequeueAfter: 100 * time.Millisecond}, err
 	}
 
 	// Initialize status
 	if len(dnsCr.Status.Conditions) == 0 {
 		dnsCr.Status = util.InitializeDesecDnsStatus()
 		err := r.Status().Update(ctx, dnsCr)
-		return ctrl.Result{Requeue: true}, err
+		return ctrl.Result{Requeue: true, RequeueAfter: 100 * time.Millisecond}, err
 	}
 
 	// Make sure domain exists
@@ -106,11 +107,11 @@ func (r *IngressReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			}
 		}
 		_, err := desecClient.CreateDomain()
-		return ctrl.Result{Requeue: true}, err
+		return ctrl.Result{Requeue: true, RequeueAfter: 100 * time.Millisecond}, err
 	}
 	if util.UpdateDesecDnsStatus(&dnsCr.Status, "Domain", metav1.ConditionTrue, "Created", "") {
 		err := r.Status().Update(ctx, dnsCr)
-		return ctrl.Result{Requeue: true}, err
+		return ctrl.Result{Requeue: true, RequeueAfter: 100 * time.Millisecond}, err
 	}
 
 	// Fetch ingress
@@ -126,7 +127,7 @@ func (r *IngressReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if !slices.Equal(ips, dnsCr.Spec.IPs) {
 		dnsCr.Spec.IPs = ips
 		err := r.Update(ctx, dnsCr)
-		return ctrl.Result{Requeue: true}, err
+		return ctrl.Result{Requeue: true, RequeueAfter: 100 * time.Millisecond}, err
 	}
 
 	// Add missing CNAMES
@@ -143,11 +144,11 @@ func (r *IngressReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			if err == nil {
 				log.Info("CNAME created", "cname", cname)
 			}
-			return ctrl.Result{Requeue: true}, err
+			return ctrl.Result{Requeue: true, RequeueAfter: 100 * time.Millisecond}, err
 		}
 		if util.UpdateDesecDnsStatus(&dnsCr.Status, subname, metav1.ConditionTrue, "Created", "") {
 			err := r.Status().Update(ctx, dnsCr)
-			return ctrl.Result{Requeue: true}, err
+			return ctrl.Result{Requeue: true, RequeueAfter: 100 * time.Millisecond}, err
 		}
 	}
 

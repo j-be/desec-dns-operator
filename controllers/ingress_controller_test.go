@@ -84,8 +84,7 @@ func TestIngressReconciler(t *testing.T) {
 		for i := 0; i < 2; i = i + 1 {
 			result, err := reconciler.Reconcile(context.TODO(), ingressRequest)
 			assert.NoError(t, err)
-			assert.True(t, result.Requeue)
-			assert.Equal(t, time.Duration(0), result.RequeueAfter)
+			assert.Equal(t, 100*time.Millisecond, result.RequeueAfter)
 			assert.NoError(t, reconciler.Get(context.TODO(), util.NamespacedName, dnsCr))
 			assert.Len(t, dnsCr.Status.Conditions, i*2)
 		}
@@ -100,8 +99,7 @@ func TestIngressReconciler(t *testing.T) {
 			assert.Empty(t, domains)
 			result, err := reconciler.Reconcile(context.TODO(), ingressRequest)
 			assert.NoError(t, err)
-			assert.True(t, result.Requeue)
-			assert.Equal(t, time.Duration(0), result.RequeueAfter)
+			assert.Equal(t, 100*time.Millisecond, result.RequeueAfter)
 			assert.NoError(t, reconciler.Get(context.TODO(), util.NamespacedName, dnsCr))
 			domainCondition := meta.FindStatusCondition(dnsCr.Status.Conditions, "Domain")
 			assert.NotNil(t, domainCondition)
@@ -115,8 +113,7 @@ func TestIngressReconciler(t *testing.T) {
 		{
 			result, err := reconciler.Reconcile(context.TODO(), ingressRequest)
 			assert.NoError(t, err)
-			assert.True(t, result.Requeue)
-			assert.Equal(t, time.Duration(0), result.RequeueAfter)
+			assert.Equal(t, 100*time.Millisecond, result.RequeueAfter)
 			assert.Len(t, domains, 1)
 			assert.NoError(t, reconciler.Get(context.TODO(), util.NamespacedName, dnsCr))
 			domainCondition := meta.FindStatusCondition(dnsCr.Status.Conditions, "Domain")
@@ -129,8 +126,7 @@ func TestIngressReconciler(t *testing.T) {
 			assert.Empty(t, dnsCr.Spec.IPs)
 			result, err := reconciler.Reconcile(context.TODO(), ingressRequest)
 			assert.NoError(t, err)
-			assert.True(t, result.Requeue)
-			assert.Equal(t, time.Duration(0), result.RequeueAfter)
+			assert.Equal(t, 100*time.Millisecond, result.RequeueAfter)
 			assert.NoError(t, reconciler.Get(context.TODO(), util.NamespacedName, dnsCr))
 			assert.Equal(t, dnsCr.Spec.IPs, []string{"1.2.3.4", "2.3.4.5"})
 		}
@@ -141,8 +137,7 @@ func TestIngressReconciler(t *testing.T) {
 				assert.Nil(t, meta.FindStatusCondition(dnsCr.Status.Conditions, subname))
 				result, err := reconciler.Reconcile(context.TODO(), ingressRequest)
 				assert.NoError(t, err)
-				assert.True(t, result.Requeue)
-				assert.Equal(t, time.Duration(0), result.RequeueAfter)
+				assert.Equal(t, 100*time.Millisecond, result.RequeueAfter)
 				assert.Len(t, rrsets, i+1)
 				cname := rrsets[i]
 				assert.Equal(t, "some-domain.dedyn.io", cname.Domain)
@@ -160,8 +155,7 @@ func TestIngressReconciler(t *testing.T) {
 			{
 				result, err := reconciler.Reconcile(context.TODO(), ingressRequest)
 				assert.NoError(t, err)
-				assert.True(t, result.Requeue)
-				assert.Equal(t, time.Duration(0), result.RequeueAfter)
+				assert.Equal(t, 100*time.Millisecond, result.RequeueAfter)
 				assert.NoError(t, reconciler.Get(context.TODO(), util.NamespacedName, dnsCr))
 				condition := meta.FindStatusCondition(dnsCr.Status.Conditions, subname)
 				assert.NotNil(t, condition)
@@ -210,7 +204,6 @@ func TestIngressReconciler(t *testing.T) {
 		result, err := reconciler.Reconcile(context.TODO(), request)
 		// Then
 		assert.EqualError(t, err, `ingresses.networking.k8s.io "IDoNotExist" not found`)
-		assert.False(t, result.Requeue)
 		assert.True(t, result.IsZero())
 	})
 }

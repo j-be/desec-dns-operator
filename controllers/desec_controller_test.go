@@ -46,7 +46,6 @@ func TestDesecDnsReconciler(t *testing.T) {
 			// Then
 			assert.True(t, updated)
 			assert.NoError(t, err)
-			assert.True(t, result.Requeue)
 			assert.Equal(t, 5*time.Minute, result.RequeueAfter)
 
 			assert.NoError(t, reconciler.Get(context.TODO(), util.NamespacedName, desec))
@@ -71,7 +70,6 @@ func TestDesecDnsReconciler(t *testing.T) {
 		result, err := reconciler.Reconcile(context.TODO(), reconcile.Request{NamespacedName: util.NamespacedName})
 		// Then
 		assert.NoError(t, err)
-		assert.False(t, result.Requeue)
 		assert.True(t, result.IsZero())
 
 		desec := new(v1.DesecDns)
@@ -119,7 +117,6 @@ func TestDesecDnsReconciler(t *testing.T) {
 		}})
 		// Then
 		assert.NoError(t, err)
-		assert.False(t, result.Requeue)
 		assert.True(t, result.IsZero())
 	})
 }

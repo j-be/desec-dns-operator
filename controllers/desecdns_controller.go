@@ -67,7 +67,7 @@ func (r *DesecDnsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			log.Info("CR not found, not doing anything", "req", req)
 			return ctrl.Result{}, nil
 		}
-		return ctrl.Result{Requeue: true}, err
+		return ctrl.Result{Requeue: true, RequeueAfter: 100 * time.Millisecond}, err
 	}
 
 	// Get and check IPs

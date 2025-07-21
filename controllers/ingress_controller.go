@@ -42,9 +42,9 @@ type IngressReconciler struct {
 	ConfigDir string
 }
 
-//+kubebuilder:rbac:groups=desec.owly.dedyn.io,resources=desecdns,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=desec.owly.dedyn.io,resources=desecdns/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=desec.owly.dedyn.io,resources=desecdns/finalizers,verbs=update
+//+kubebuilder:rbac:groups=desec.owly.dedyn.io,resources=desecdnsdnses,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=desec.owly.dedyn.io,resources=desecdnsdnses/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=desec.owly.dedyn.io,resources=desecdnsdnses/finalizers,verbs=update
 //+kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch
 //+kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses/status,verbs=get
 

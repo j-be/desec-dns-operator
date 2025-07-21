@@ -7,7 +7,7 @@ rules:
 - apiGroups:
   - desec.owly.dedyn.io
   resources:
-  - desecdns
+  - desecdnsdnses
   verbs:
   - create
   - delete
@@ -19,13 +19,13 @@ rules:
 - apiGroups:
   - desec.owly.dedyn.io
   resources:
-  - desecdns/finalizers
+  - desecdnsdnses/finalizers
   verbs:
   - update
 - apiGroups:
   - desec.owly.dedyn.io
   resources:
-  - desecdns/status
+  - desecdnsdnses/status
   verbs:
   - get
   - patch

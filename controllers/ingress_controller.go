@@ -18,9 +18,9 @@ package controllers
 
 import (
 	"context"
+	"slices"
 	"time"
 
-	"golang.org/x/exp/slices"
 	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -61,7 +61,3 @@ type DesecDnsList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []DesecDns `json:"items"`
 }
-
-func init() {
-	SchemeBuilder.Register(&DesecDns{}, &DesecDnsList{})
-}
